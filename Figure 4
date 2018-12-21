@@ -1,0 +1,3 @@
+par(mfcol=c(1,2))
+perc.origin.v.variable(log(ms.data$area),"log(% Increase in area)",ms.data$family,ms.data$origin)
+perc.origin.v.variable(ms.data$area,"% Increase in area",ms.data$family,ms.data$origin)
