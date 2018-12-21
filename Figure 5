@@ -1,0 +1,159 @@
+par(mfcol=c(1,2))
+#perc.origin.v.variable(log(ms.data$area),"log(% Increase in area)",ms.data$family,ms.data$origin)
+#perc.origin.v.variable(ms.data$area,"% Increase in area",ms.data$family,ms.data$origin)
+
+  c(1,3,4,5,6,7,8,9,10,11,13,14,15,16,19,21,22,23,27,31,32)->col.code
+    family.ID<-ms.data$family
+      c(brewer.pal(12,'Set3'),brewer.pal(8,"Set2"),brewer.pal(9,'Set1'),'black','grey','black','brown','blue')->col.temp
+origin<-ms.data$origin
+var.A<-ms.data$area
+cbind(ms.data,rep(NA,times=nrow(ms.data)))->ms.data.extend
+colnames(ms.data.extend)[length(colnames(ms.data.extend))]<-'offset.origin'
+cbind(ms.data,rep(NA,times=nrow(ms.data)))->ms.data.extend
+colnames(ms.data.extend)[length(colnames(ms.data.extend))]<-'offset.var'
+for(i in levels(family.ID)){
+  index<-which(family.ID == i)
+  fam.origin.index<-which(origin[index] == max(origin[index]))
+  offset.origin<-origin[index[fam.origin.index[1]]]-origin[index]
+  offset.origin->ms.data.extend[index,'offset.origin']
+  
+  offset.var<-var.A[index[fam.origin.index[1]]]-var.A[index]
+  offset.var->ms.data.extend[index,'offset.var']
+}
+
+    for(i in 1:length(levels(family.ID))){
+      levels(family.ID)[i]->temp.ID
+      
+      if(temp.ID == "Candeinidae"){col.code[i]<-1}
+    if(temp.ID == "Globigerinitidae"){col.code[i]<-8}
+    if(temp.ID == "Cassigerinellidae"){col.code[i]<-3}
+    if(temp.ID == "Chiloguembelinidae"){col.code[i]<-4}
+    if(temp.ID == "Favusellidae"){col.code[i]<-5}
+    if(temp.ID == "Rotaliporidae"){col.code[i]<-22}
+    if(temp.ID == "Globigerinelloididae"){col.code[i]<-6}
+    if(temp.ID == "Globigerinidae"){col.code[i]<-7}
+    if(temp.ID == "Globorotaliidae"){col.code[i]<-9}
+    if(temp.ID == "Globotruncanidae"){col.code[i]<-10}
+    if(temp.ID == "Rugoglobigerinidae"){col.code[i]<-23}
+    if(temp.ID == "Conoglobigerinidae"){col.code[i]<-11}
+    if(temp.ID == "Guembelitriidae"){col.code[i]<-13}
+    if(temp.ID == "Hantkeninidae"){col.code[i]<-14}
+    if(temp.ID == "Hastigerinidae"){col.code[i]<-15}
+    if(temp.ID == "Hedbergellidae"){col.code[i]<-16}
+    if(temp.ID == "Globanomalidae"){col.code[i]<-33}
+    if(temp.ID == "Praehedbergellidae"){col.code[i]<-34}
+    if(temp.ID == "Heterohelicidae"){col.code[i]<-19}
+    if(temp.ID == "Planomalinidae"){col.code[i]<-21}
+    if(temp.ID == "Schackoinidae"){col.code[i]<-27}
+    if(temp.ID == "Truncorotaloididae"){col.code[i]<-31}
+    if(temp.ID == "UNKNOWN"){col.code[i]<-32}
+    }
+    col.key<-cbind(levels(family.ID),col.code) #col.key is now a 2-col obj with family (c1) and color.index (c2)
+    #levels(col.key[,2])<-levels(col.temp)
+
+    for(i in 1:nrow(col.key)){
+      col.key[i,2]<-col.temp[as.numeric(col.key[i,2])]
+    }
+    
+cbind(col.key[,1],rep(NA,times=length(col.key[,1])),
+      rep(NA,times=length(col.key[,1])),
+      rep(NA,times=length(col.key[,1])))->fam.lm
+colnames(fam.lm)[2:4]<-c('n','slope','r2')
+for(i in levels(family.ID)){
+  index<-which(family.ID == i)
+  if(length(index) > 1){
+    fam.origin.index<-which(origin[index] == max(origin[index]))
+    offset.origin<-origin[index[fam.origin.index[1]]]-origin[index]
+      ms.data.extend$offset.origin[index]<-offset.origin
+  
+    offset.var<-var.A[index]-var.A[index[fam.origin.index[1]]]
+    offset.var<-offset.var/var.A[index[fam.origin.index[1]]]*100
+      ms.data.extend$offset.var[index]<-offset.var
+  
+    if(all(is.na(offset.var)) == F){
+      lm(offset.var ~ offset.origin)->lm.a
+      summary(lm.a)$coefficients[2,1]->fam.lm[which(col.key[,1] == i),'slope']
+      length(index)->fam.lm[which(col.key[,1] == i),'n']
+      summary(lm.a)$r.squared->fam.lm[which(col.key[,1] == i),'r2']
+      }
+  }
+}
+
+rbind(fam.lm,c('All',NA,NA,NA))->fam.lm
+  #excluding the 'UNKNOWNS'
+  which(ms.data.extend$family != 'UNKNOWN')->index
+  
+lm(ms.data.extend$offset.var[index] ~ ms.data.extend$offset.origin[index])->lm.a
+summary(lm.a)$coefficients[2,1]->fam.lm[which(fam.lm[,1] == 'All'),'slope']
+length(index)->fam.lm[which(fam.lm[,1] == 'All'),'n']
+summary(lm.a)$r.squared->fam.lm[which(fam.lm[,1] == 'All'),'r2']
+
+plot(log(as.numeric(fam.lm[,4])),as.numeric(fam.lm[,3]),
+     xlab='Log(r^2)',
+     ylab='Slope (linear regression)'
+     #,ylim=c(-10,10)
+     )
+abline(v=c(log(0.001),log(0.01),log(0.1),log(0.05)))
+abline(h=0,lwd=.5)
+text(c(log(0.001)-.2,log(0.01)-.2,log(0.1)-.2,log(0.05)-.2),
+     c(40,40,40,40),
+     c(0.001,0.01,0.1,0.05))
+for(i in levels(family.ID)){
+  points(log(as.numeric(fam.lm[which(fam.lm[,1] == i),4])),
+         as.numeric(fam.lm[which(fam.lm[,1] == i),3]),
+         col=col.key[which(fam.lm[,1] == i),2],
+         lwd=2,
+         pch=16,
+         cex=2)
+  if(is.na(as.numeric(fam.lm[which(fam.lm[,1] == i),4])) != T){
+    if(as.numeric(fam.lm[which(fam.lm[,1] == i),4]) < 0.05){
+      text(log(as.numeric(fam.lm[which(fam.lm[,1] == i),4])),
+           as.numeric(fam.lm[which(fam.lm[,1] == i),3]),
+           labels=i,
+           cex=0.6)
+      }
+    }
+  }
+
+points(log(as.numeric(fam.lm[23,4])),as.numeric(fam.lm[23,3]),
+       pch=23,
+       cex=2,
+       bg='black')
+
+plot(log(as.numeric(fam.lm[,4])),as.numeric(fam.lm[,3]),
+     xlab='Log(r^2)',
+     ylab='Slope (linear regression)'
+     ,ylim=c(-10,10)
+     )
+abline(v=c(log(0.001),log(0.01),log(0.1),log(0.05)))
+abline(h=0,lwd=.5)
+text(c(log(0.001)-.2,log(0.01)-.2,log(0.1)-.2,log(0.05)-.2),
+     c(-7,-7,-7,-7),
+     c(0.001,0.01,0.1,0.05))
+for(i in levels(family.ID)){
+  points(log(as.numeric(fam.lm[which(fam.lm[,1] == i),4])),
+         as.numeric(fam.lm[which(fam.lm[,1] == i),3]),
+         col=col.key[which(fam.lm[,1] == i),2],
+         lwd=2,
+         pch=16,
+         cex=2)
+    if(is.na(as.numeric(fam.lm[which(fam.lm[,1] == i),4])) != T){
+      if(as.numeric(fam.lm[which(fam.lm[,1] == i),4]) < 0.05){
+        text(log(as.numeric(fam.lm[which(fam.lm[,1] == i),4])),
+             as.numeric(fam.lm[which(fam.lm[,1] == i),3]),
+             labels=i,
+             cex=0.6)
+        }
+    }
+}
+points(log(as.numeric(fam.lm[23,4])),as.numeric(fam.lm[23,3]),
+       pch=23,
+       cex=2,
+       bg='black')
+
+fam.lm[which(as.numeric(fam.lm[,2]) > 60),1]->threshold.fam #families that hit the threshold
+
+which(ms.data.extend$family %in% threshold.fam)->threshold.sp #species that hit the threshold
+lm(ms.data.extend$offset.var[threshold.sp] ~ ms.data.extend$offset.origin[threshold.sp])->lm.a
+points(log(summary(lm.a)$r.squared),summary(lm.a)$coefficients[2,1],cex=2,pch=23,bg='red')
+par(par.def)
