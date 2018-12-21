@@ -1,0 +1,8 @@
+range.line.plot(ms.data$area,"Area (um^2)",ms.data$family,ms.data$origin,ms.data$extin)
+  lines(time.mean(ms.data$area,ms.data$origin,ms.data$extin,1),lwd=2)
+  lines(time.median(ms.data$area,ms.data$origin,ms.data$extin,1),lwd=2,col="red")
+  abline(v=c(120,111,94)) #OAEs
+  abline(v=c(34,23),col="blue") #Ceno cold events
+  abline(v=c(56,52.6,50.3,17,15),col='red') #Ceno warmings
+  lines(time.var(ms.data$area,ms.data$origin,ms.data$extin,1),lwd=2,col='green')
+  #This is a rough, preillustrator version of figure 1
