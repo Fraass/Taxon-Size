@@ -1,0 +1,8 @@
+plot(0,0,type='n',xlim=c(105,0),ylim=c(-100000,170000))
+  lines(time.mean(ms.data$area,ms.data$origin,ms.data$extin,1),lwd=2)
+  lines(time.median(ms.data$area,ms.data$origin,ms.data$extin,1),lwd=2,col="red")
+  lines(cramer$Age,cramer$Temperature*10000-100000,lwd=2,col='Blue')
+  axis(side=4,at=c(0,-50000,-100000),labels=c(0,{-50000+100000}/10000,{-100000+100000}/10000))
+    abline(v=c(120,111,94)) #OAEs
+  abline(v=c(34,24),col="blue") #Ceno cold events
+  abline(v=c(56,52.6,50.3,17,15),col='red') #Ceno warmings
