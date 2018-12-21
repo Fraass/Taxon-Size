@@ -1,3 +1,5 @@
+
+
 plot(0,0,type='n',xlim=c(105,0),ylim=c(-100000,170000))
   lines(time.mean(ms.data$area,ms.data$origin,ms.data$extin,1),lwd=2)
   lines(time.median(ms.data$area,ms.data$origin,ms.data$extin,1),lwd=2,col="red")
