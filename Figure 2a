@@ -1,0 +1,54 @@
+par()->par.def
+par(mfcol=c(1,2))
+time.mean(sqrt(ms.data$area/pi)*2,ms.data$origin,ms.data$extin,1)->size.mean
+
+plot(size.mean,type='n',lwd=2,xlim=c(65.5,0),ylim=c(150,600),xlab='Time (Ma)',ylab='Diameter*')
+which(sch.size$Region %in% c("Tm","Sp") )->P.index
+which(sch.size$Region %in% c("Tp","St") )->T.index
+T.mean<-cbind(1:65,rep(NA,times=65))
+P.mean<-cbind(1:65,rep(NA,times=65))
+A.mean<-cbind(1:65,rep(NA,times=65))
+
+for(i in 1:65){
+  which(sch.size$Age[P.index] < i & sch.size$Age[P.index] > i-1)->t
+  mean(sch.size$Size[P.index][t],na.rm=T)->P.mean[i,2]
+  
+  which(sch.size$Age[T.index] < i & sch.size$Age[T.index] > i-1)->t
+  mean(sch.size$Size[T.index][t],na.rm=T)->T.mean[i,2]
+ 
+  which(sch.size$Age < i & sch.size$Age > i-1)->t
+  mean(sch.size$Size[t],na.rm=T)->A.mean[i,2]
+}
+points(A.mean,col='grey',pch=16,cex=2)
+points(P.mean,col='blue',lwd=2,cex=2)
+points(T.mean,col='red',lwd=2,cex=2)
+lines(size.mean,lwd=2)
+
+plot(A.mean[1:65,2],size.mean[1:65,2],col='grey',ylab="This dataset",xlab="Schmidt et al.",pch=16,cex=1.5,
+     xlim=c(min(c(size.mean[1:65,2],
+              P.mean[1:65,2],
+              A.mean[1:65,2],
+              T.mean[1:65,2]),
+            na.rm=T),
+          max(c(size.mean[1:65,2],
+              P.mean[1:65,2],
+              A.mean[1:65,2],
+              T.mean[1:65,2]),
+            na.rm=T)),
+  ylim=c(min(c(size.mean[1:65,2],
+              P.mean[1:65,2],
+              A.mean[1:65,2],
+              T.mean[1:65,2]),
+            na.rm=T),
+          max(c(size.mean[1:65,2],
+              P.mean[1:65,2],
+              A.mean[1:65,2],
+              T.mean[1:65,2]),
+            na.rm=T))
+  )
+points(P.mean[1:65,2],size.mean[1:65,2],col='blue',cex=2,lwd=2)
+points(T.mean[1:65,2],size.mean[1:65,2],col='red',cex=2,lwd=2)
+text(500,300,paste("corr=",round(cor(size.mean[1:65,2],T.mean[1:65,2],use='complete.obs'),2)),col='red')
+text(500,275,paste("corr=",round(cor(size.mean[1:65,2],P.mean[1:65,2],use='complete.obs'),2)),col='blue')
+text(500,250,paste("corr=",round(cor(size.mean[1:65,2],A.mean[1:65,2],use='complete.obs'),2)),col='grey')
+par(par.def)
