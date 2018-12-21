@@ -198,3 +198,23 @@ range.line.plot<-function(var.A,y.axis.label,family.ID,origin,extin){
       counter+1->counter
     }
   }
+time.mean<-function(data,origin,extin,resolution=0.1){
+  max.time<-max(origin)
+  min.time<-min(extin)
+  seq(to=max.time,from=min.time,by=resolution)->t
+  cbind(t,rep(NA,times=length(t)))->output
+  for(i in 1:length(t)){
+    mean(data[which(origin > t[i] & extin < t[i])],na.rm=T)->output[i,2]
+  }
+  return(output)
+}
+time.median<-function(data,origin,extin,resolution=0.1){
+  max.time<-max(origin)
+  min.time<-min(extin)
+  seq(to=max.time,from=min.time,by=resolution)->t
+  cbind(t,rep(NA,times=length(t)))->output
+  for(i in 1:length(t)){
+    median(data[which(origin > t[i] & extin < t[i])],na.rm=T)->output[i,2]
+  }
+  return(output)
+}
