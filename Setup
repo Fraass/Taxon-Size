@@ -1,0 +1,118 @@
+library(vegan)
+library(RColorBrewer)
+library(vioplot)
+library(RCurl)
+#library(xlsx)
+"%w/o%" <- function(x, y) x[!x %in% y] #--  x without y
+
+read.csv('schmidt 2004 supplemental.csv',header=T)->sch.size
+#read.csv("F:/Morphology Project/Fraass Masters/dataframes/MasterList (vstat 1.06).csv")->ms.data
+read.csv(text=getURL("https://raw.githubusercontent.com/Fraass/TestComplexityAll/master/Data/MasterList%20(vstat%201.1).csv"),header=T)->ms.data
+read.delim(file='./jgrc12191-sup-0014-ts04_Cramer.txt',sep='\t')->cramer
+
+#filter out incomplete data & obviously incorrect neoflexuosa size
+  ms.data<-ms.data[which(is.na(ms.data$area) != TRUE),]
+  ms.data<-ms.data[which(ms.data$area != max(ms.data$area)),]
+
+#useful portions of dataset
+tax.id<-ms.data[,c('family','genus','subgenus','species')]
+perc.origin.v.variable<-function(var.A,y.label,family.ID,origin){
+  #setting colors
+  #these are based on the colors set in the other function (vioplot.pca)
+c(brewer.pal(12,'Set3'),brewer.pal(8,"Set2"),brewer.pal(9,'Set1'),'black','grey','black','brown','blue')->col.temp
+  fam.col<-rep(NA,length(family.ID))
+  droplevels(family.ID)->family.ID
+  col.code<-rep(NA,times=length(levels(family.ID)))
+  for(i in 1:length(levels(family.ID))){
+    levels(family.ID)[i]->temp.ID
+    if(temp.ID == "Candeinidae"){col.code[i]<-1}
+    if(temp.ID == "Globigerinitidae"){col.code[i]<-8}
+    if(temp.ID == "Cassigerinellidae"){col.code[i]<-3}
+    if(temp.ID == "Chiloguembelinidae"){col.code[i]<-4}
+    if(temp.ID == "Favusellidae"){col.code[i]<-5}
+    if(temp.ID == "Rotaliporidae"){col.code[i]<-22}
+    if(temp.ID == "Globigerinelloididae"){col.code[i]<-6}
+    if(temp.ID == "Globigerinidae"){col.code[i]<-7}
+    if(temp.ID == "Globorotaliidae"){col.code[i]<-9}
+    if(temp.ID == "Globotruncanidae"){col.code[i]<-10}
+    if(temp.ID == "Rugoglobigerinidae"){col.code[i]<-23}
+    if(temp.ID == "Conoglobigerinidae"){col.code[i]<-11}
+    if(temp.ID == "Guembelitriidae"){col.code[i]<-13}
+    if(temp.ID == "Hantkeninidae"){col.code[i]<-14}
+    if(temp.ID == "Hastigerinidae"){col.code[i]<-15}
+    if(temp.ID == "Hedbergellidae"){col.code[i]<-16}
+    if(temp.ID == "Globanomalidae"){col.code[i]<-33}
+    if(temp.ID == "Praehedbergellidae"){col.code[i]<-34}
+    if(temp.ID == "Heterohelicidae"){col.code[i]<-19}
+    if(temp.ID == "Planomalinidae"){col.code[i]<-21}
+    if(temp.ID == "Schackoinidae"){col.code[i]<-27}
+    if(temp.ID == "Truncorotaloididae"){col.code[i]<-31}
+    if(temp.ID == "UNKNOWN"){col.code[i]<-32}
+  }
+  col.key<-cbind(levels(family.ID),col.code) #col.key is now a 2-col obj with family (c1) and color.index (c2)
+  #levels(col.key[,2])<-levels(col.temp)
+  for(i in 1:nrow(col.key)){
+    col.key[i,2]<-col.temp[as.numeric(col.key[i,2])]
+  }
+  
+  1->counter
+  for(i in levels(family.ID)){ #This portion takes colkey and subs in the color value from RColorBrewer 
+    fam.col[which(family.ID == i)]<-col.key[which(col.key[,1] == i),2]
+    counter+1->counter
+  }
+  
+  cbind(ms.data,rep(NA,times=nrow(ms.data)))->ms.data.extend
+  colnames(ms.data.extend)[length(colnames(ms.data.extend))]<-'offset.origin'
+  cbind(ms.data,rep(NA,times=nrow(ms.data)))->ms.data.extend
+  colnames(ms.data.extend)[length(colnames(ms.data.extend))]<-'offset.var'
+  
+  
+  for(i in levels(family.ID)){
+    index<-which(family.ID == i)
+    fam.origin.index<-which(origin[index] == max(origin[index]))
+    
+    offset.origin<-origin[index[fam.origin.index[1]]]-origin[index]
+    offset.origin->ms.data.extend[index,'offset.origin']
+    
+    offset.var<-var.A[index]-var.A[index[fam.origin.index[1]]]
+    offset.var/var.A[index[fam.origin.index[1]]]*100->ms.data.extend[index,'offset.var']
+    
+  } 
+  
+  plot(0,0,
+       type='n',
+       xlim=c(0,max(ms.data.extend$offset.origin)),
+       ylim=c(min(ms.data.extend$offset.var,na.rm=T),
+              max(ms.data.extend$offset.var,na.rm=T)),
+       ylab=y.label,
+       xlab='Time from family FAD (myr)')
+  
+  for(i in levels(family.ID)){
+    index<-which(family.ID == i)
+    if(length(index) > 1){
+      fam.origin.index<-which(origin[index] == max(origin[index]))
+      offset.origin<-origin[index[fam.origin.index[1]]]-origin[index]
+      
+      
+      offset.var<-var.A[index]-var.A[index[fam.origin.index[1]]]
+      offset.var<-offset.var/var.A[index[fam.origin.index[1]]]*100
+      
+      
+      points(sort(offset.origin),
+             offset.var[order(offset.origin)],
+             col=col.key[which(col.key[,1] == i),2],
+             lwd=2)
+      if(all(is.na(offset.var)) == F){
+          lm(offset.var ~ {offset.origin})->lm.a
+              if(summary(lm.a)$r.squared < 0.05){
+                  abline(lm.a,
+                  col=col.key[which(col.key[,1] == i),2])
+              }}
+    }
+  }
+  abline(lm(ms.data.extend$offset.var ~ ms.data.extend$offset.origin),
+         lwd=3)
+  abline(lm(ms.data.extend$offset.var[1:nrow(ms.data.extend) %w/o% which(ms.data.extend$family == "Globigerinidae")] ~ ms.data.extend$offset.origin[1:nrow(ms.data.extend) %w/o% which(ms.data.extend$family == "Globigerinidae")]),
+         lwd=3,lty=2)
+  return(summary(lm(ms.data.extend$offset.var ~ ms.data.extend$offset.origin)))
+}
